@@ -39,4 +39,4 @@ out/
 ### application profiles ###
 application-*.yml
 
-../.env
+.env

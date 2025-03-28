@@ -3,7 +3,6 @@ package com.cryptory.be.issue.domain;
 import com.cryptory.be.chart.domain.Chart;
 import com.cryptory.be.coin.domain.Coin;
 import com.cryptory.be.global.entity.BaseTimeEntity;
-import com.cryptory.be.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -47,10 +46,7 @@ public class Issue extends BaseTimeEntity {
     // 삭제 여부
     private boolean isDeleted = false;
 
-    // 회원ID (Many to One 관계)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    private Long userId;
 
     // 하나의 차트에 대해 이슈 한 개만 등록
     @OneToOne(fetch = FetchType.EAGER)  // 즉시 로딩
@@ -64,7 +60,7 @@ public class Issue extends BaseTimeEntity {
     @Builder // 모든 필드를 초기화 하는 생성자
     public Issue(String title, String content, LocalDate date, String newsTitle,
                  String source, String type, Long requestCount,
-                 boolean isDeleted, Coin coin, User user, Chart chart) {
+                 boolean isDeleted, Coin coin, Long userId, Chart chart) {
         this.title = title;
         this.content = content;
         this.date = date;
@@ -74,7 +70,7 @@ public class Issue extends BaseTimeEntity {
         this.requestCount = requestCount;
         this.isDeleted = isDeleted;
         this.coin = coin;
-        this.user = user;
+        this.userId = userId;
         this.chart = chart;
     }
 

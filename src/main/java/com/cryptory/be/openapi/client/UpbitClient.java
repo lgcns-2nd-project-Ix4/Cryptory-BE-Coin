@@ -1,13 +1,8 @@
 package com.cryptory.be.openapi.client;
 
-import com.cryptory.be.coin.domain.Coin;
-import com.cryptory.be.coin.dto.CoinDto;
-import com.cryptory.be.global.util.DateFormat;
 import com.cryptory.be.openapi.dto.Candle;
 import com.cryptory.be.openapi.dto.Market;
 import com.cryptory.be.openapi.dto.Ticker;
-import com.nimbusds.jwt.util.DateUtils;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;

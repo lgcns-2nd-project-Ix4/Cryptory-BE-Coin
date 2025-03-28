@@ -2,8 +2,6 @@ package com.cryptory.be.issue.domain;
 
 import com.cryptory.be.chart.domain.Chart;
 import com.cryptory.be.global.entity.BaseTimeEntity;
-import com.cryptory.be.user.domain.User;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -33,18 +31,16 @@ public class IssueComment extends BaseTimeEntity {
 
     private boolean isDeleted = false;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id")
-    private User user;
+    private Long userId;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "issue_id")
     private Issue issue;
     
     @Builder
-    public IssueComment(String content, User user, Issue issue) {
+    public IssueComment(String content, Long userId, Issue issue) {
         this.content = content;
-        this.user = user;
+        this.userId = userId;
         this.issue = issue;
 
         this.isDeleted = false;

@@ -1,5 +1,32 @@
 spring:
-  application:
-    name: be
-  config:
-    import: "optional:configserver:http://localhost:8888"
+  cloud:
+    config:
+      enabled: false
+  profiles:
+    include: jwt, oauth, local
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+
+  servlet:
+    multipart:
+      max-file-size: 1MB
+      max-request-size: 10MB
+      enabled: true
+
+logging.level:
+  org.hibernate.SQL: debug
+
+file:
+  base-dir: /
+
+naver:
+  client-id: ${NAVER_CLIENT_ID}
+  secret: ${NAVER_SECRET}
+
+#  # security logging
+#  org.springframework.security: DEBUG

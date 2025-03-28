@@ -1,6 +1,5 @@
 package com.cryptory.be.global.config;
 
-import com.cryptory.be.admin.interceptor.TrafficLogInterceptor;
 import com.cryptory.be.global.util.FileUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -14,14 +13,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
 
-    private final TrafficLogInterceptor trafficLogInterceptor;
+// private final TrafficLogInterceptor trafficLogInterceptor;
 
-    @Override
-    public void addInterceptors(InterceptorRegistry registry){
-        registry.addInterceptor(trafficLogInterceptor)
-                .addPathPatterns("/**")
-                .excludePathPatterns("/css/**", "/images/**", "/js/**", "/error");
-    }
+//    @Override
+//    public void addInterceptors(InterceptorRegistry registry){
+//        registry.addInterceptor(trafficLogInterceptor)
+//                .addPathPatterns("/**")
+//                .excludePathPatterns("/css/**", "/images/**", "/js/**", "/error");
+//    }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {

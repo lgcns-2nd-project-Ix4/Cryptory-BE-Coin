@@ -1,13 +1,15 @@
 package com.cryptory.be.openapi.client;
 
 import com.cryptory.be.openapi.dto.NaverNews;
-import com.nimbusds.jose.shaded.gson.Gson;
-import com.nimbusds.jose.shaded.gson.JsonArray;
-import com.nimbusds.jose.shaded.gson.JsonObject;
-import com.nimbusds.jose.shaded.gson.reflect.TypeToken;
+
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -32,11 +34,11 @@ public class NaverClient {
 
     private final RestTemplate restTemplate;
 
-    @Value("${naver.client-id}")
-    private String clientId;
+    //@Value("${naver.client-id}")
+    private String clientId = "jmN_6X059uBGP0khRplV";
 
-    @Value("${naver.secret}")
-    private String secret;
+    //@Value("${naver.secret}")
+    private String secret = "r6IvZUUTea";
 
     private final static String NAVER_NEWS_URL = "https://openapi.naver.com/v1/search/news.json";
     private final static int DISPLAY = 10;
@@ -62,12 +64,15 @@ public class NaverClient {
     // 지피티 코드 참고
     private List<NaverNews> parseItemsFromJson(String responseBody) {
         // Gson 객체 생성
+
         Gson gson = new Gson();
 
         // JSON 응답을 JsonObject로 파싱
         JsonObject jsonObject = gson.fromJson(responseBody, JsonObject.class);
 
         // "items" 필드를 JsonArray로 추출
+
+
         JsonArray itemsArray = jsonObject.getAsJsonArray("items");
 
         // JsonArray를 List<NaverNews>로 변환

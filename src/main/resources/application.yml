@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: coin-service
   config:
     import:
       #      - 'optional:file:.env' 이것 대신 Intellij의 Edit Configuration에서 환경 변수 선택

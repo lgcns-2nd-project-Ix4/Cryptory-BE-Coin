@@ -39,7 +39,7 @@ RUN ./gradlew clean build -x test --no-daemon
 # 최종 경량 이미지 사용
 FROM openjdk:17-jdk-slim
 WORKDIR /app
-
+RUN echo "" > .env
 COPY --from=builder /app/build/libs/*.jar app.jar
 
 ENV SPRING_PROFILES_ACTIVE=docker \

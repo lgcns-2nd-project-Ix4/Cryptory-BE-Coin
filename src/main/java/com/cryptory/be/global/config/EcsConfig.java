@@ -16,7 +16,7 @@ import java.net.UnknownHostException;
 @Profile("docker")
 @RequiredArgsConstructor
 public class EcsConfig {
-    private AwsMetadataTemplate awsMetadataTemplate;
+    private final AwsMetadataTemplate awsMetadataTemplate;
 
     @Bean
     public EurekaInstanceConfigBean eurekaInstanceConfigBean(InetUtils inetUtils) {

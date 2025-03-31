@@ -19,7 +19,7 @@ public class AwsMetadataTemplate {
     private static final String TOKEN_TTL = "3600"; // 60 minutes
     private static final String VERSION = "latest";
 
-    private final RestTemplate restTemplate;
+    private final RestTemplate restTemplate = new RestTemplate();
 
     // Method to create token
     public String createToken() {

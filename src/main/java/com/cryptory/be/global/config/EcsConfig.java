@@ -22,10 +22,11 @@ public class EcsConfig {
     public EurekaInstanceConfigBean eurekaInstanceConfigBean(InetUtils inetUtils) {
         EurekaInstanceConfigBean config = new EurekaInstanceConfigBean(inetUtils);
         String ip = null;
-        String awsToken = awsMetadataTemplate.createToken();
-        if (awsToken != null) {
-            ip = awsMetadataTemplate.getPublicIp(awsToken);
-        }
+//        String awsToken = awsMetadataTemplate.createToken();
+//        if (awsToken != null) {
+//            ip = awsMetadataTemplate.getPublicIp(awsToken);
+//        }
+        ip = awsMetadataTemplate.getPublicIp("");
         if (ip == null) {
             config.setHostname(ip);
         }

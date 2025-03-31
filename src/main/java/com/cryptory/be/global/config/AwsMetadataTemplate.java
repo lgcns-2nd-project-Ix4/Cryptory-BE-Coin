@@ -19,7 +19,7 @@ public class AwsMetadataTemplate {
     private static final String TOKEN_TTL_HEADER = "X-aws-ec2-metadata-token-ttl-seconds";
     private static final String TOKEN_HEADER = "X-aws-ec2-metadata-token";
     private static final String TOKEN_TTL = "3600"; // 60 minutes
-    private static final String VERSION = "latest";
+    private static final String VERSION = "v1";
 
     private final RestTemplate restTemplate = new RestTemplate();
 

@@ -2,8 +2,6 @@ package com.cryptory.be.global.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.gson.JsonParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -17,7 +15,7 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public class AwsMetadataTemplate {
 
-    private static final String META_URL = "http://169.254.169.254";
+    private static final String META_URL = "http://169.254.170.2";
     private static final String TOKEN_TTL_HEADER = "X-aws-ec2-metadata-token-ttl-seconds";
     private static final String TOKEN_HEADER = "X-aws-ec2-metadata-token";
     private static final String TOKEN_TTL = "3600"; // 60 minutes
@@ -39,6 +37,7 @@ public class AwsMetadataTemplate {
                     String.class
             ).getBody();
         } catch (Exception ex) {
+            ex.printStackTrace();
             log.warn("AWS 토큰 정보를 생성하는데 실패했습니다.");
             return null;
         }
@@ -51,15 +50,12 @@ public class AwsMetadataTemplate {
         HttpEntity<Object> request = new HttpEntity<>(null, headers);
 
         try {
-            String response = restTemplate.exchange(
+            return restTemplate.exchange(
                     META_URL + "/" + VERSION + "/meta-data/public-ipv4",
                     HttpMethod.GET,
                     request,
                     String.class
             ).getBody();
-
-            JsonNode node = new ObjectMapper().readTree(response);
-            return node.at("/Containers/0/Networks/0/IPv4Addresses/0").asText();
         } catch (Exception ex) {
             log.warn("AWS IP 메타 정보를 가져오는데 실패했습니다. IP가 내부 값으로 설정됩니다.");
             return null;

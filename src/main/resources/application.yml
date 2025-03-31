@@ -10,4 +10,4 @@ spring:
       enabled: true
       name: coin-service
   profiles:
-    include: docker
+    active: docker

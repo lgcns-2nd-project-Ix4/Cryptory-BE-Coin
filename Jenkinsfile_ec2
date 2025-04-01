@@ -11,7 +11,7 @@ pipeline {
     stages {
 		stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/lgcns-2nd-project-Ix4/Cryptory-BE-User.git'
+                git branch: 'main', url: 'https://github.com/lgcns-2nd-project-Ix4/Cryptory-BE-Coin.git'
             }
         }
 

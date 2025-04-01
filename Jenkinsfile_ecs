@@ -1,0 +1,226 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION = 'ap-northeast-1'
+
+        // ECR 정보
+        ECR_REGISTRY = '050314037804.dkr.ecr.ap-northeast-1.amazonaws.com'
+        ECR_REPO = "${ECR_REGISTRY}/be-coin"
+        IMAGE_NAME = 'be-coin'
+
+        // ECS 정보
+        ECS_CLUSTER = 'Ix4-cluster'
+        ECS_SERVICE = 'be-coin-service'
+        TASK_DEFINITION_NAME = 'task-definition-BE-Coin'
+        CONTAINER_NAME = 'be-coin-container'
+        EXECUTION_ROLE_ARN = 'arn:aws:iam::050314037804:role/ecsTaskExecutionRole'
+        DESIRED_COUNT = 1
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/lgcns-2nd-project-Ix4/Cryptory-BE-Coin.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh """
+                    docker build -t $IMAGE_NAME .
+                    docker tag $IMAGE_NAME:latest $ECR_REPO:latest
+                """
+            }
+        }
+
+        stage('Login to ECR') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'AWS-CREDENTIALS'
+                ]]) {
+                    sh """
+                        aws ecr get-login-password --region $AWS_REGION | \
+                        docker login --username AWS --password-stdin $ECR_REGISTRY
+                    """
+                }
+            }
+        }
+
+        stage('Push Docker Image to ECR') {
+            steps {
+                sh "docker push $ECR_REPO:latest"
+            }
+        }
+
+        stage('Register ECS Task Definition') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'AWS-CREDENTIALS'
+                ]]) {
+                    script {
+                        def registerOutput = sh(
+                            script: """
+                                aws ecs register-task-definition \
+                                    --family $TASK_DEFINITION_NAME \
+                                    --requires-compatibilities FARGATE \
+                                    --network-mode awsvpc \
+                                    --execution-role-arn $EXECUTION_ROLE_ARN \
+                                    --cpu "256" \
+                                    --memory "512" \
+                                    --container-definitions '[
+                                        {
+                                            "name": "$CONTAINER_NAME",
+                                            "image": "$ECR_REPO:latest",
+                                            "essential": true,
+
+                                            "portMappings": [
+                                                {
+                                                    "name": "coin-service",
+                                                    "containerPort": 8080,
+                                                    "hostPort": 8080,
+                                                    "protocol": "tcp",
+                                                    "appProtocol": "http"
+                                                }
+                                            ],
+                                            "logConfiguration": {
+                                                "logDriver": "awslogs",
+                                                "options": {
+                                                  "awslogs-group": "/ecs/task-definition-BE-Coin",
+                                                  "awslogs-region": "ap-northeast-1",
+                                                  "awslogs-stream-prefix": "ecs"
+                                                }
+                                            },
+                                            "environment": [
+                                                {
+                                                    "name": "CONFIG_SERVER_URL",
+                                                    "value": "${env.CONFIG_SERVER_URL}"
+                                                },
+                                                {
+                                                    "name": "NAVER_CLIENT_ID",
+                                                    "value": "${env.NAVER_CLIENT_ID}"
+                                                },
+                                                {
+                                                    "name": "NAVER_SECRET",
+                                                    "value": "${env.NAVER_SECRET}"
+                                                },
+                                                {
+                                                    "name": "MYSQL_URL",
+                                                    "value": "${env.MYSQL_URL}"
+                                                },
+                                                {
+                                                    "name": "MYSQL_USERNAME",
+                                                    "value": "${env.MYSQL_USERNAME}"
+                                                },
+                                                {
+                                                    "name": "MYSQL_PASSWORD",
+                                                    "value": "${env.MYSQL_PASSWORD}"
+                                                },
+                                                {
+                                                    "name": "KAKAO_CLIENT_ID",
+                                                    "value": "${env.KAKAO_CLIENT_ID}"
+                                                },
+                                                {
+                                                    "name": "KAKAO_SECRET",
+                                                    "value": "${env.KAKAO_SECRET}"
+                                                },
+                                                {
+                                                    "name": "BASE_URL",
+                                                    "value": "${env.BASE_URL}"
+                                                },
+                                                {
+                                                    "name": "RABBITMQ_HOST",
+                                                    "value": "${env.RABBITMQ_HOST}"
+                                                },
+                                                {
+                                                    "name": "RABBITMQ_PORT",
+                                                    "value": "${env.RABBITMQ_PORT}"
+                                                },
+                                                {
+                                                    "name": "RABBITMQ_USERNAME",
+                                                    "value": "${env.RABBITMQ_USERNAME}"
+                                                },
+                                                {
+                                                    "name": "RABBITMQ_PASSWORD",
+                                                    "value": "${env.RABBITMQ_PASSWORD}"
+                                                },
+                                                {
+                                                    "name": "EUREKA_URL",
+                                                    "value": "${env.EUREKA_URL}"
+                                                },
+                                                {
+                                                    "name": "ACCESS_EXPIRATION",
+                                                    "value": "${env.ACCESS_EXPIRATION}"
+                                                },
+                                                {
+                                                    "name": "SECRET_KEY",
+                                                    "value": "${env.SECRET_KEY}"
+                                                },
+                                                {
+                                                    "name": "BASE_UPLOAD_DIR",
+                                                    "value": "${env.BASE_UPLOAD_DIR}"
+                                                },
+                                                {
+                                                    "name": "ENV_ACTIVE",
+                                                    "value": "NO"
+                                                },
+                                                {
+                                                    "name": "SPRING_PROFILE_ACTIVE",
+                                                    "value": "docker"
+                                                },
+                                                {
+                                                    "name": "EUREKA_INSTANCE_IP",
+                                                    "value": "internal-Ix4-alb-1732332082.ap-northeast-1.elb.amazonaws.com"
+                                                }
+                                            ]
+                                        }
+                                    ]' \
+                                    --region $AWS_REGION \
+                                    --output json
+                            """,
+                            returnStdout: true
+                        ).trim()
+
+                        def taskDefArn = new groovy.json.JsonSlurperClassic()
+                            .parseText(registerOutput)
+                            .taskDefinition
+                            .taskDefinitionArn
+
+                        env.TASK_DEF_ARN = taskDefArn
+                    }
+                }
+            }
+        }
+
+
+        stage('Deploy to ECS') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'AWS-CREDENTIALS'
+                ]]) {
+                    sh """
+                        aws ecs update-service \
+                            --cluster $ECS_CLUSTER \
+                            --service $ECS_SERVICE \
+                            --task-definition $TASK_DEF_ARN \
+                            --desired-count $DESIRED_COUNT \
+                            --force-new-deployment \
+                            --region $AWS_REGION
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ ECS service successfully created or updated!"
+        }
+        failure {
+            echo "❌ ECS service creation or update failed!"
+        }
+    }
+}

@@ -16,17 +16,16 @@ import java.net.UnknownHostException;
 @Profile("docker")
 @RequiredArgsConstructor
 public class EcsConfig {
-    private final AwsMetadataTemplate awsMetadataTemplate;
+    private AwsMetadataTemplate awsMetadataTemplate;
 
     @Bean
     public EurekaInstanceConfigBean eurekaInstanceConfigBean(InetUtils inetUtils) {
         EurekaInstanceConfigBean config = new EurekaInstanceConfigBean(inetUtils);
         String ip = null;
-//        String awsToken = awsMetadataTemplate.createToken();
-//        if (awsToken != null) {
-//            ip = awsMetadataTemplate.getPublicIp(awsToken);
-//        }
-        ip = awsMetadataTemplate.getPublicIp("");
+        String awsToken = awsMetadataTemplate.createToken();
+        if (awsToken != null) {
+            ip = awsMetadataTemplate.getPublicIp(awsToken);
+        }
         if (ip == null) {
             config.setHostname(ip);
         }

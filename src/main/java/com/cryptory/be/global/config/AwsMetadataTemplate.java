@@ -1,10 +1,7 @@
 package com.cryptory.be.global.config;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -14,14 +11,13 @@ import org.springframework.web.client.RestTemplate;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-@Profile("docker")
 public class AwsMetadataTemplate {
 
-    private static final String META_URL = "http://169.254.170.2";
+    private static final String META_URL = "http://169.254.169.254";
     private static final String TOKEN_TTL_HEADER = "X-aws-ec2-metadata-token-ttl-seconds";
     private static final String TOKEN_HEADER = "X-aws-ec2-metadata-token";
     private static final String TOKEN_TTL = "3600"; // 60 minutes
-    private static final String VERSION = "v1";
+    private static final String VERSION = "latest";
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -39,7 +35,6 @@ public class AwsMetadataTemplate {
                     String.class
             ).getBody();
         } catch (Exception ex) {
-            ex.printStackTrace();
             log.warn("AWS 토큰 정보를 생성하는데 실패했습니다.");
             return null;
         }

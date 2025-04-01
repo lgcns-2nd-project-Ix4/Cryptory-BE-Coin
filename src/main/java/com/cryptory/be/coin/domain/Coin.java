@@ -2,15 +2,13 @@ package com.cryptory.be.coin.domain;
 
 import com.cryptory.be.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "coins")
+@EqualsAndHashCode( of = "id", callSuper = false)
 public class Coin extends BaseTimeEntity {
 
     @Id
@@ -29,7 +27,7 @@ public class Coin extends BaseTimeEntity {
         this.isDisplayed = isDisplayed;
     }
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coin_symbol_id")
     private CoinSymbol coinSymbol;  // 코인 심볼 관련 정보
 
@@ -38,9 +36,7 @@ public class Coin extends BaseTimeEntity {
         this.koreanName = koreanName;
         this.englishName = englishName;
         this.code = code;
-
         this.coinSymbol = coinSymbol;
-
         this.isDisplayed = isDisplayed;
     }
 }

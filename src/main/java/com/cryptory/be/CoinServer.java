@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication(exclude = SecurityAutoConfiguration.class)
 @EnableJpaAuditing
-public class BeApplication {
+public class CoinServer {
 	public static void main(String[] args) {
 		// 운영 환경이 아니면 .env 파일 로드
 		String activeProfile = System.getenv("ENV_ACTIVE");
@@ -17,6 +17,6 @@ public class BeApplication {
 			dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
 		}
 
-		SpringApplication.run(BeApplication.class, args);
+		SpringApplication.run(CoinServer.class, args);
 	}
 }

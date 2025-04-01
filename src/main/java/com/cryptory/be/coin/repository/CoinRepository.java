@@ -18,16 +18,17 @@ public interface CoinRepository extends JpaRepository<Coin, Long> {
 
     Coin findByCode(String market);
 
+    List<Coin> findByCodeIn(List<String> codes);
+
     // symbol대신 englishName으로 검색 수정
     // WHERE :keyword IS NULL OR LOWER(c.koreanName) LIKE %:keyword% OR LOWER(c.englishName) LIKE %:keyword%
     @Query("SELECT c FROM Coin c WHERE LOWER(c.koreanName) LIKE :keyword OR LOWER(c.englishName) LIKE :keyword")
     Page<Coin> searchCoins(@Param("keyword") String keyword, Pageable pageable);
 
-
     @Transactional
     @Modifying
     @Query("DELETE FROM Coin c WHERE c.id NOT IN :ids")
-    void deleteCoinsByIdIn(@Param("ids") List<Long> ids);
+    void deleteCoinsByIdNotIn(@Param("ids") List<Long> ids);
 
 
     @Query("SELECT COUNT(i) FROM Coin i WHERE i.isDisplayed = true")

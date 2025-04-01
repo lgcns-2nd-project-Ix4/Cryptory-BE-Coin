@@ -4,10 +4,12 @@ spring:
   config:
     import:
       #      - 'optional:file:.env' 이것 대신 Intellij의 Edit Configuration에서 환경 변수 선택
-      - "optional:configserver:${CONFIG_SERVER_URL}"
+      - "optional:configserver:http://localhost:8888"
   cloud:
     config:
       enabled: true
       name: coin-service
   profiles:
-    include: docker
+    include: local
+server:
+  port: ${SERVER_PORT:8080}

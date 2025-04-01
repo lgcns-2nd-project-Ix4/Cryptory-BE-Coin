@@ -184,7 +184,7 @@ public enum CoinSymbolEnum {
             return CoinSymbolEnum.valueOf(market.replace("KRW-", ""));
         } catch (IllegalArgumentException e) {
             // 존재하지 않는 코인인 경우 우선 BTC 매핑(계속 최신화가 돼서 새로운 코인이 추가될 수 있음)
-            log.error("존재하지 않는 코인: {}", market);
+            log.error("존재하지 않는 코인 Enum: {} Defaulting to BTC ", market);
             return CoinSymbolEnum.BTC;
         }
 
@@ -192,8 +192,14 @@ public enum CoinSymbolEnum {
 
     public CoinSymbol toCoinSymbol() {
         return CoinSymbol.builder()
+                .code(this.name())
                 .color(this.color)
                 .logoUrl(this.logoUrl)
                 .build();
+    }
+
+    // Enum(종목코드) 반환
+    public String getCode(){
+        return this.name();
     }
 }

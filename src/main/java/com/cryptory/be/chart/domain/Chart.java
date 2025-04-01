@@ -12,6 +12,7 @@ import lombok.*;
 @Entity
 @Builder
 @Table(name = "charts")
+@EqualsAndHashCode(of = "id", callSuper = false)
 public class Chart extends BaseTimeEntity {
 
     @Id

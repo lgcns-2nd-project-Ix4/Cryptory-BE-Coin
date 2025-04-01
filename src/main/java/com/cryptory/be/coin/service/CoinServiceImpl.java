@@ -2,11 +2,7 @@ package com.cryptory.be.coin.service;
 
 import java.net.URI;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.cryptory.be.chart.domain.Chart;
@@ -15,8 +11,7 @@ import com.cryptory.be.chart.exception.ChartErrorCode;
 import com.cryptory.be.chart.exception.ChartException;
 import com.cryptory.be.chart.repository.ChartRepository;
 import com.cryptory.be.coin.domain.Coin;
-import com.cryptory.be.coin.dto.CoinDetailDto;
-import com.cryptory.be.coin.dto.CoinNewsDto;
+import com.cryptory.be.coin.dto.*;
 import com.cryptory.be.coin.exception.CoinErrorCode;
 import com.cryptory.be.coin.exception.CoinException;
 import com.cryptory.be.global.util.DateFormat;
@@ -28,15 +23,20 @@ import com.cryptory.be.openapi.service.NaverService;
 import com.cryptory.be.openapi.service.UpbitService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 
-import com.cryptory.be.coin.dto.CoinDto;
 import com.cryptory.be.coin.repository.CoinRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CoinServiceImpl implements CoinService {
 
     private final NaverService naverService;
@@ -47,6 +47,59 @@ public class CoinServiceImpl implements CoinService {
     private final IssueRepository issueRepository;
 
     private final int END_OF_KRW = 4;
+    private static final int MAX_DISPLAYED_COINS = 7; // 노출 제한 개수 상수
+
+    // 관리자용 Openfeign 메서드
+    // 코인 목록 조회
+    public Page<CoinListResponseDto> getCoinListForAdmin(String keyword, int page, int size, String sort){
+        Sort sorting = parseSort(sort);
+        Pageable pageable = PageRequest.of(page,size, sorting);
+
+        String parsedKeyword = null;
+        if(keyword != null && !keyword.trim().isEmpty()){
+            parsedKeyword = "%" + keyword.toLowerCase().trim() + "%";
+        }
+        log.debug("관리자 코인 목록 검색 키워드: {}", parsedKeyword);
+
+        Page<Coin> coinsPage;
+        if (parsedKeyword == null) {
+            // 관리자는 isDisplayed=false인 코인도 볼 수 있어야 할 수 있음 - 요구사항에 따라 findAll 또는 다른 쿼리 사용
+            coinsPage = coinRepository.findAll(pageable);
+        } else {
+            // 관리자 검색 로직 - 요구사항에 따라 searchCoins 또는 다른 쿼리 사용
+            coinsPage = coinRepository.searchCoins(parsedKeyword, pageable);
+        }
+
+        // Page<Coin> -> Page<CoinListResponseDto> 변환
+        return coinsPage.map(this::convertToCoinListResponseDto);
+    }
+
+    // 특정코인 조회 - 관리자용
+    public CoinDetailResponseDto getCoinDetailsForAdmin(Long coinId){
+        Coin coin = coinRepository.findById(coinId)
+                .orElseThrow(() -> new NoSuchElementException("해당 코인을 찾을 수 없습니다ㅏ. ID: " + coinId));
+        // Coin -> CoinDetailResponseDto 변환
+        return convertToCoinDetailResponseDto(coin);
+    }
+
+    @Override
+    @Transactional
+    public void updateDisplaySetting(Long coinId, boolean isDisplayed){
+        Coin coin = coinRepository.findById(coinId)
+                .orElseThrow(() -> new NoSuchElementException("해당 코인을 찾을 수 없습니다. ID: " + coinId));
+
+        // isDisplayed를 true로 설정하려는 경우 + 현재 노출 상태가 아닌 경우에만 개수 제한 확인
+        if (isDisplayed && !coin.isDisplayed()) {
+            long currentDisplayedCount = coinRepository.countByIsDisplayedTrue();
+            if (currentDisplayedCount >= MAX_DISPLAYED_COINS) {
+                throw new IllegalArgumentException("메인 페이지에 노출 가능한 코인 수(" + MAX_DISPLAYED_COINS + "개)를 초과했습니다.");
+            }
+        }
+        // 상태 변경
+        coin.setIsDisplayed(isDisplayed);
+        // @Transactional에 의해 변경 감지로 저장됨
+        log.info("(CoinService) Coin display status updated for ID: {}, isDisplayed: {}", coinId, isDisplayed);
+    }
 
     // 코인 목록 조회
     @Override
@@ -163,6 +216,65 @@ public class CoinServiceImpl implements CoinService {
                     }
                 })
                 .toList();
+    }
+
+
+    // 헬퍼함수들 적용
+    private CoinListResponseDto convertToCoinListResponseDto(Coin coin) {
+        // coin-service 내부에 정의된 com.cryptory.be.coin.dto.CoinListResponseDto 사용 가정
+        String logoUrl = (coin.getCoinSymbol() != null) ? coin.getCoinSymbol().getLogoUrl() : null;
+        // Coin.code ("KRW-BTC") 에서 "KRW-" 제거 후 symbol로 사용
+        String symbolCode = (coin.getCode() != null && coin.getCode().startsWith("KRW-"))
+                ? coin.getCode().substring(END_OF_KRW)
+                : coin.getCode();
+
+        return CoinListResponseDto.builder()
+                .cryptoId(coin.getId())
+                .koreanName(coin.getKoreanName())
+                .englishName(coin.getEnglishName())
+                .symbol(symbolCode) // 예: BTC
+                .logoUrl(logoUrl)
+                .isDisplayed(coin.isDisplayed())
+                .build();
+    }
+
+    private CoinDetailResponseDto convertToCoinDetailResponseDto(Coin coin) {
+        String logoUrl = (coin.getCoinSymbol() != null) ? coin.getCoinSymbol().getLogoUrl() : null;
+        String cryptoColor = (coin.getCoinSymbol() != null) ? coin.getCoinSymbol().getColor() : null;
+        String symbolCode = (coin.getCode() != null && coin.getCode().startsWith("KRW-"))
+                ? coin.getCode().substring(END_OF_KRW)
+                : coin.getCode();
+
+        return CoinDetailResponseDto.builder()
+                .cryptoId(coin.getId())
+                .name(coin.getKoreanName()) // DTO 필드명 'name' 사용
+                .symbol(symbolCode) // 예: BTC
+                .logoUrl(logoUrl)
+                .cryptoColor(cryptoColor)
+                .isDisplayed(coin.isDisplayed())
+                .build();
+    }
+
+    private Sort parseSort(String sort) {
+        Sort defaultSort = Sort.by("id").ascending();
+        if (sort == null || sort.trim().isEmpty()) {
+            return defaultSort;
+        }
+        try {
+            String[] parts = sort.split(",");
+            String property = parts[0].trim();
+            if (property.isEmpty()) return defaultSort;
+
+            Sort.Direction direction = Sort.Direction.ASC;
+            if (parts.length > 1 && "desc".equalsIgnoreCase(parts[1].trim())) {
+                direction = Sort.Direction.DESC;
+            }
+            // TODO: property가 Coin 엔티티에 실제 존재하는 필드인지 검증하는 로직 추가 고려
+            return Sort.by(direction, property);
+        } catch (Exception e) {
+            log.warn("정렬 파라미터 파싱 오류: '{}'. 기본 정렬 적용.", sort, e);
+            return defaultSort;
+        }
     }
 
 }

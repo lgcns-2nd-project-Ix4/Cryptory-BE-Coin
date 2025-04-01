@@ -10,7 +10,7 @@ pipeline {
         IMAGE_NAME = 'be-coin'
 
         // ECS 정보
-        ECS_CLUSTER = 'Ix4-cluster'
+        ECS_CLUSTER = 'Ix4-be-cluster'
         ECS_SERVICE = 'be-coin-service'
         TASK_DEFINITION_NAME = 'task-definition-BE-Coin'
         CONTAINER_NAME = 'be-coin-container'

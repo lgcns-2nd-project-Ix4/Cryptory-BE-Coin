@@ -4,6 +4,9 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+src/main/resources/*.yml
+# 또는 하위 폴더의 .yml 파일까지 모두 포함하려면
+src/main/resources/**/*.yml
 
 ### STS ###
 .apt_generated
